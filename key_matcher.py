@@ -137,9 +137,24 @@ for keystroke in keystrokes:
     correlated_keys.append(correlate_key(keystroke))
 
 
-# Display message 
-# FIXME no error detection implemented
+# Initial message attempt
 decrypted_message = list()
 for key in correlated_keys:
     decrypted_message.append(key[0][0])
-print(decrypted_message)
+
+# Detect if message contains all valid words
+words_in_message = str(decrypted_message).split(sep=' ')
+with open('words.txt') as words_file:
+    valid = True
+    words_list = words_file.read()
+    for word in words_in_message:
+        if not word in words_list:
+            valid = False
+
+    # Display message 
+    if valid:
+        print(decrypted_message)
+
+    # FIXME implement the iterative aspect
+    else:
+        pass 
