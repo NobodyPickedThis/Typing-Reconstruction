@@ -145,10 +145,11 @@ for key in correlated_keys:
 
 # Detect if message contains all valid words
 def is_valid(message) -> bool:
-    words_in_message = str(decrypted_message).split(sep=' ')
+    text = ''.join(message)
+    words_in_message = text.split(sep=' ')
     with open('words.txt') as words_file:
         valid = True
-        words_list = words_file.read()
+        words_list = set(words_file.read().split())
         for word in words_in_message:
             if not word in words_list:
                 valid = False
@@ -188,16 +189,26 @@ if is_valid(decrypted_message):
 else:
     current_iteration += 1
     current_depth += 1
-    altered_message = decrypted_message
-    altered_message, excluded_values = tweak_message(decrypted_message, [])
+    altered_correlations = decrypted_message
+    altered_correlations, excluded_values = tweak_message(correlated_keys, [])
+
+    altered_message = list()
+    for key in altered_correlations:
+        altered_message.append(key[0][0])
 
     while not is_valid(altered_message) and current_iteration <= n_4:
         current_iteration += 1
-        altered_message, excluded_values = tweak_message(altered_message, excluded_values)
+        altered_correlations, excluded_values = tweak_message(altered_correlations, excluded_values)
+        altered_message = list()
+        for key in altered_correlations:
+            altered_message.append(key[0][0])
 
         while not is_valid(altered_message) and current_depth <= n_3:
             current_depth += 1
-            altered_message, excluded_this_iter = tweak_message(altered_message, excluded_values | excluded_this_iter)
+            altered_correlations, excluded_this_iter = tweak_message(altered_correlations, excluded_values | excluded_this_iter)
+            altered_message = list()
+            for key in altered_correlations:
+                altered_message.append(key[0][0])
 
     # Display message, indicate if invalid
     if is_valid(altered_message):
