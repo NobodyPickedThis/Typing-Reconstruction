@@ -1,48 +1,11 @@
 import soundfile
 from scipy.spatial.distance import correlation as correlate
+from scipy.signal.windows import tukey
 from scipy.fft import fft
 from scipy import stats
 import numpy as np
 import statistics
-from collections import OrderedDict
 import librosa
-
-
-
-# Allocate samples to arrays of their respective recordings. Note that all bitrates are assumed to be the same because the samples were all recorded 
-# during the same session with the same recording equipment.
-# FIXME take these recordings
-a, bitrate     = (soundfile.read('a_0.wav'), soundfile.read('a_1.wav'), soundfile.read('a_2.wav'), soundfile.read('a_3.wav'), soundfile.read('a_4.wav'))
-b, bitrate     = (soundfile.read('b_0.wav'), soundfile.read('b_1.wav'), soundfile.read('b_2.wav'), soundfile.read('b_3.wav'), soundfile.read('b_4.wav'))
-c, bitrate     = (soundfile.read('c_0.wav'), soundfile.read('c_1.wav'), soundfile.read('c_2.wav'), soundfile.read('c_3.wav'), soundfile.read('c_4.wav'))
-d, bitrate     = (soundfile.read('d_0.wav'), soundfile.read('d_1.wav'), soundfile.read('d_2.wav'), soundfile.read('d_3.wav'), soundfile.read('d_4.wav'))
-e, bitrate     = (soundfile.read('e_0.wav'), soundfile.read('e_1.wav'), soundfile.read('e_2.wav'), soundfile.read('e_3.wav'), soundfile.read('e_4.wav'))
-f, bitrate     = (soundfile.read('f_0.wav'), soundfile.read('f_1.wav'), soundfile.read('f_2.wav'), soundfile.read('f_3.wav'), soundfile.read('f_4.wav'))
-g, bitrate     = (soundfile.read('g_0.wav'), soundfile.read('g_1.wav'), soundfile.read('g_2.wav'), soundfile.read('g_3.wav'), soundfile.read('g_4.wav'))
-h, bitrate     = (soundfile.read('h_0.wav'), soundfile.read('h_1.wav'), soundfile.read('h_2.wav'), soundfile.read('h_3.wav'), soundfile.read('h_4.wav'))
-i, bitrate     = (soundfile.read('i_0.wav'), soundfile.read('i_1.wav'), soundfile.read('i_2.wav'), soundfile.read('i_3.wav'), soundfile.read('i_4.wav'))
-j, bitrate     = (soundfile.read('j_0.wav'), soundfile.read('j_1.wav'), soundfile.read('j_2.wav'), soundfile.read('j_3.wav'), soundfile.read('j_4.wav'))
-k, bitrate     = (soundfile.read('k_0.wav'), soundfile.read('k_1.wav'), soundfile.read('k_2.wav'), soundfile.read('k_3.wav'), soundfile.read('k_4.wav'))
-l, bitrate     = (soundfile.read('l_0.wav'), soundfile.read('l_1.wav'), soundfile.read('l_2.wav'), soundfile.read('l_3.wav'), soundfile.read('l_4.wav'))
-m, bitrate     = (soundfile.read('m_0.wav'), soundfile.read('m_1.wav'), soundfile.read('m_2.wav'), soundfile.read('m_3.wav'), soundfile.read('m_4.wav'))
-n, bitrate     = (soundfile.read('n_0.wav'), soundfile.read('n_1.wav'), soundfile.read('n_2.wav'), soundfile.read('n_3.wav'), soundfile.read('n_4.wav'))
-o, bitrate     = (soundfile.read('o_0.wav'), soundfile.read('o_1.wav'), soundfile.read('o_2.wav'), soundfile.read('o_3.wav'), soundfile.read('o_4.wav'))
-p, bitrate     = (soundfile.read('p_0.wav'), soundfile.read('p_1.wav'), soundfile.read('p_2.wav'), soundfile.read('p_3.wav'), soundfile.read('p_4.wav'))
-q, bitrate     = (soundfile.read('q_0.wav'), soundfile.read('q_1.wav'), soundfile.read('q_2.wav'), soundfile.read('q_3.wav'), soundfile.read('q_4.wav'))
-r, bitrate     = (soundfile.read('r_0.wav'), soundfile.read('r_1.wav'), soundfile.read('r_2.wav'), soundfile.read('r_3.wav'), soundfile.read('r_4.wav'))
-s, bitrate     = (soundfile.read('s_0.wav'), soundfile.read('s_1.wav'), soundfile.read('s_2.wav'), soundfile.read('s_3.wav'), soundfile.read('s_4.wav'))
-t, bitrate     = (soundfile.read('t_0.wav'), soundfile.read('t_1.wav'), soundfile.read('t_2.wav'), soundfile.read('t_3.wav'), soundfile.read('t_4.wav'))
-u, bitrate     = (soundfile.read('u_0.wav'), soundfile.read('u_1.wav'), soundfile.read('u_2.wav'), soundfile.read('u_3.wav'), soundfile.read('u_4.wav'))
-v, bitrate     = (soundfile.read('v_0.wav'), soundfile.read('v_1.wav'), soundfile.read('v_2.wav'), soundfile.read('v_3.wav'), soundfile.read('v_4.wav'))
-w, bitrate     = (soundfile.read('w_0.wav'), soundfile.read('w_1.wav'), soundfile.read('w_2.wav'), soundfile.read('w_3.wav'), soundfile.read('w_4.wav'))
-x, bitrate     = (soundfile.read('x_0.wav'), soundfile.read('x_1.wav'), soundfile.read('x_2.wav'), soundfile.read('x_3.wav'), soundfile.read('x_4.wav'))
-y, bitrate     = (soundfile.read('y_0.wav'), soundfile.read('y_1.wav'), soundfile.read('y_2.wav'), soundfile.read('y_3.wav'), soundfile.read('y_4.wav'))
-z, bitrate     = (soundfile.read('z_0.wav'), soundfile.read('z_1.wav'), soundfile.read('z_2.wav'), soundfile.read('z_3.wav'), soundfile.read('z_4.wav'))
-space, bitrate = (soundfile.read('__0.wav'), soundfile.read('__1.wav'), soundfile.read('__2.wav'), soundfile.read('__3.wav'), soundfile.read('__4.wav'))
-
-alphabet = (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, space)
-alphabet_strings = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ')
-
 
 
 # Values identified in algorithm
@@ -52,38 +15,115 @@ n_3 = 3     # Error correction depth
 n_4 = 3     # Error correction iterations
 
 
+# Allocate samples to arrays of their respective recordings. Note that all bitrates are assumed to be the same because the samples were all recorded 
+# during the same session with the same recording equipment. Samples expected to be mono.
+# FIXME take these recordings
+a_data     = [soundfile.read(f'a_{i}.wav') for i in range(n_1)]
+b_data     = [soundfile.read(f'b_{i}.wav') for i in range(n_1)]
+c_data     = [soundfile.read(f'c_{i}.wav') for i in range(n_1)]
+d_data     = [soundfile.read(f'd_{i}.wav') for i in range(n_1)]
+e_data     = [soundfile.read(f'e_{i}.wav') for i in range(n_1)]
+f_data     = [soundfile.read(f'f_{i}.wav') for i in range(n_1)]
+g_data     = [soundfile.read(f'g_{i}.wav') for i in range(n_1)]
+h_data     = [soundfile.read(f'h_{i}.wav') for i in range(n_1)]
+i_data     = [soundfile.read(f'i_{i}.wav') for i in range(n_1)]
+j_data     = [soundfile.read(f'j_{i}.wav') for i in range(n_1)]
+k_data     = [soundfile.read(f'k_{i}.wav') for i in range(n_1)]
+l_data     = [soundfile.read(f'l_{i}.wav') for i in range(n_1)]
+m_data     = [soundfile.read(f'm_{i}.wav') for i in range(n_1)]
+n_data     = [soundfile.read(f'n_{i}.wav') for i in range(n_1)]
+o_data     = [soundfile.read(f'o_{i}.wav') for i in range(n_1)]
+p_data     = [soundfile.read(f'p_{i}.wav') for i in range(n_1)]
+q_data     = [soundfile.read(f'q_{i}.wav') for i in range(n_1)]
+r_data     = [soundfile.read(f'r_{i}.wav') for i in range(n_1)]
+s_data     = [soundfile.read(f's_{i}.wav') for i in range(n_1)]
+t_data     = [soundfile.read(f't_{i}.wav') for i in range(n_1)]
+u_data     = [soundfile.read(f'u_{i}.wav') for i in range(n_1)]
+v_data     = [soundfile.read(f'v_{i}.wav') for i in range(n_1)]
+w_data     = [soundfile.read(f'w_{i}.wav') for i in range(n_1)]
+x_data     = [soundfile.read(f'x_{i}.wav') for i in range(n_1)]
+y_data     = [soundfile.read(f'y_{i}.wav') for i in range(n_1)]
+z_data     = [soundfile.read(f'z_{i}.wav') for i in range(n_1)]
+space_data = [soundfile.read(f'__{i}.wav') for i in range(n_1)]
+
+a     = [d for d, sr in a_data]
+b     = [d for d, sr in b_data]
+c     = [d for d, sr in c_data]
+d     = [d for d, sr in d_data]
+e     = [d for d, sr in e_data]
+f     = [d for d, sr in f_data]
+g     = [d for d, sr in g_data]
+h     = [d for d, sr in h_data]
+i     = [d for d, sr in i_data]
+j     = [d for d, sr in j_data]
+k     = [d for d, sr in k_data]
+l     = [d for d, sr in l_data]
+m     = [d for d, sr in m_data]
+n     = [d for d, sr in n_data]
+o     = [d for d, sr in o_data]
+p     = [d for d, sr in p_data]
+q     = [d for d, sr in q_data]
+r     = [d for d, sr in r_data]
+s     = [d for d, sr in s_data]
+t     = [d for d, sr in t_data]
+u     = [d for d, sr in u_data]
+v     = [d for d, sr in v_data]
+w     = [d for d, sr in w_data]
+x     = [d for d, sr in x_data]
+y     = [d for d, sr in y_data]
+z     = [d for d, sr in z_data]
+space = [d for d, sr in space_data]
+
+bitrate = a_data[0][1]  # assuming all recordings share the same samplerate, per your comment
+alphabet = (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, space)
+alphabet_strings = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ')
+
+
+# Used for preparing samples for spectral comparison
+# Alpha controls how strong the taper is: 1 -> rect, 0 -> half-Hann
+def window_and_pad(signal, target_len, alpha=0.5):
+    windowed = signal * tukey(len(signal) * 2, alpha)[len(signal):]
+    if len(windowed) < target_len:
+        windowed = np.pad(windowed, (0, target_len - len(windowed)))
+    return windowed
+
 
 # Returns the n_2 most correlated keys of a sample
-def correlate(sample) -> OrderedDict:
+def correlate_key(sample):
     correlations = dict()
     threshold_z = 2
 
     # Check sample against each possible key
     for letter in range(len(alphabet)):
 
+        # Prepare sample(s) for accurate comparison
+        recordings = alphabet[letter]
+        target_len = max(len(sample), max(len(rec) for rec in recordings))
+        padded_sample = window_and_pad(sample, target_len)
+        padded_recordings = [window_and_pad(rec, target_len) for rec in recordings]
+
         # Check spectrum of sample against spectrum of each recording of the letter
-        for recording in range(len(alphabet[letter])):
-            correlations[alphabet_strings[letter]] = correlate(fft(sample), fft(alphabet[letter][recording]))
+        correlation_scores = [correlate(np.abs(fft(padded_sample)), np.abs(fft(padded_recordings[r]))) for r in range(len(padded_recordings))]
 
         # Outlier detection before mean taken
-        outlier_indices = np.where(np.abs(stats.zscore(correlations[alphabet_strings[letter]])) > threshold_z)[0]
-        correlations = dict(filter(lambda item: item[0] not in outlier_indices, correlations.items()))
+        correlation_scores = np.array(correlation_scores)
+        z = np.abs(stats.zscore(correlation_scores))
+        clean_scores = correlation_scores[z <= threshold_z]
+        if len(clean_scores) == 0:
+            clean_scores = correlation_scores
+        correlations[alphabet_strings[letter]] = statistics.mean(clean_scores)
 
-        correlations[alphabet_strings[letter]] = statistics.mean(correlations[alphabet[letter]])
-
-    most_correlated = OrderedDict(sorted(correlations.items(), key=lambda item: item[1]))[:n_2]
-    return list(most_correlated.items())
-
+    most_correlated = sorted(correlations.items(), key=lambda item: item[1])[:n_2]
+    return most_correlated
 
 
 # Sample of secret message. Bitrate assumed to be equal to those of letters due to recording with the same equipment.
 secret_message, bitrate = soundfile.read('secret_message.wav')
 
 
-
 # Split the message up into individual keystrokes via transient detection
-onset_frames = librosa.onset.onset_detection(y=secret_message, sr=bitrate, backtrack=True)
-keystrokes = ()
+onset_frames = librosa.onset.onset_detect(y=secret_message, sr=bitrate, backtrack=True, units='samples')
+keystrokes = list()
 for idx in range(len(onset_frames)):
     if idx < len(onset_frames) - 1:
         keystrokes.append(secret_message[onset_frames[idx]:onset_frames[idx + 1]])
@@ -91,17 +131,15 @@ for idx in range(len(onset_frames)):
         keystrokes.append(secret_message[onset_frames[idx]:])
 
 
-
 # Get correlated keys. Form is list of duple ('letter_string', correlation), sorted by correlation amt
-correlated_keys = ()
+correlated_keys = list()
 for keystroke in keystrokes:
-    correlated_keys.append(correlate(keystroke))
-
+    correlated_keys.append(correlate_key(keystroke))
 
 
 # Display message 
 # FIXME no error detection implemented
-decrypted_message = ()
+decrypted_message = list()
 for key in correlated_keys:
-    decrypted_message.append(key[0])
+    decrypted_message.append(key[0][0])
 print(decrypted_message)
