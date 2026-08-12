@@ -142,19 +142,67 @@ decrypted_message = list()
 for key in correlated_keys:
     decrypted_message.append(key[0][0])
 
+
 # Detect if message contains all valid words
-words_in_message = str(decrypted_message).split(sep=' ')
-with open('words.txt') as words_file:
-    valid = True
-    words_list = words_file.read()
-    for word in words_in_message:
-        if not word in words_list:
-            valid = False
+def is_valid(message) -> bool:
+    words_in_message = str(decrypted_message).split(sep=' ')
+    with open('words.txt') as words_file:
+        valid = True
+        words_list = words_file.read()
+        for word in words_in_message:
+            if not word in words_list:
+                valid = False
+        return valid
 
-    # Display message 
-    if valid:
-        print(decrypted_message)
 
-    # FIXME implement the iterative aspect
+# Makes a single change, swapping the letter with the least confidence that has a 
+# relatively high confidence second guess. Letters may be excluded from this process,
+# done during higher correction depths.
+def tweak_message(correlations, excluded_values):
+    # Get 3 least confident non-excluded letters
+    candidates = list()
+    for i in range(3):
+        mask = np.isin(correlations, candidates + excluded_values, invert=True)
+        candidates.append(np.min(correlations[:][0], axis=1, where=mask))
+
+    # Swap the candidate with the highest confidence second guess
+    altered_letter = np.max(candidates[:][1], axis=1)
+    for letter in correlations:
+        if letter == altered_letter:
+            letter.pop(0)
+
+    # Add to excluded values
+    excluded_values.append(altered_letter)
+
+    return correlations, excluded_values
+
+
+current_depth = 0
+current_iteration = 0
+
+# Display message if valid
+if is_valid(decrypted_message):
+    print(decrypted_message)
+    exit
+
+else:
+    current_iteration += 1
+    current_depth += 1
+    altered_message = decrypted_message
+    altered_message, excluded_values = tweak_message(decrypted_message, [])
+
+    while not is_valid(altered_message) and current_iteration <= n_4:
+        current_iteration += 1
+        altered_message, excluded_values = tweak_message(altered_message, excluded_values)
+
+        while not is_valid(altered_message) and current_depth <= n_3:
+            current_depth += 1
+            altered_message, excluded_this_iter = tweak_message(altered_message, excluded_values | excluded_this_iter)
+
+    # Display message, indicate if invalid
+    if is_valid(altered_message):
+        print(altered_message)
+        exit
     else:
-        pass 
+        print("Unable to validate message.\n\tFirst attempt:", decrypted_message, "\n\tLast attempt:", altered_message)
+            
