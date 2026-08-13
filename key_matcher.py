@@ -7,6 +7,7 @@ import numpy as np
 import statistics
 import librosa
 
+# =================CONSTANTS=AND=SAMPLES=================
 
 # Values identified in algorithm
 n_1 = 5     # Samples per letter
@@ -14,37 +15,39 @@ n_2 = 3     # Number of most correlated keys to include
 n_3 = 3     # Error correction depth 
 n_4 = 3     # Error correction iterations
 
+DO_ERROR_CORRECTION = False
+
 
 # Allocate samples to arrays of their respective recordings. Note that all bitrates are assumed to be the same because the samples were all recorded 
 # during the same session with the same recording equipment. Samples expected to be mono.
 # FIXME take these recordings
-a_data     = [soundfile.read(f'a_{i}.wav') for i in range(n_1)]
-b_data     = [soundfile.read(f'b_{i}.wav') for i in range(n_1)]
-c_data     = [soundfile.read(f'c_{i}.wav') for i in range(n_1)]
-d_data     = [soundfile.read(f'd_{i}.wav') for i in range(n_1)]
-e_data     = [soundfile.read(f'e_{i}.wav') for i in range(n_1)]
-f_data     = [soundfile.read(f'f_{i}.wav') for i in range(n_1)]
-g_data     = [soundfile.read(f'g_{i}.wav') for i in range(n_1)]
-h_data     = [soundfile.read(f'h_{i}.wav') for i in range(n_1)]
-i_data     = [soundfile.read(f'i_{i}.wav') for i in range(n_1)]
-j_data     = [soundfile.read(f'j_{i}.wav') for i in range(n_1)]
-k_data     = [soundfile.read(f'k_{i}.wav') for i in range(n_1)]
-l_data     = [soundfile.read(f'l_{i}.wav') for i in range(n_1)]
-m_data     = [soundfile.read(f'm_{i}.wav') for i in range(n_1)]
-n_data     = [soundfile.read(f'n_{i}.wav') for i in range(n_1)]
-o_data     = [soundfile.read(f'o_{i}.wav') for i in range(n_1)]
-p_data     = [soundfile.read(f'p_{i}.wav') for i in range(n_1)]
-q_data     = [soundfile.read(f'q_{i}.wav') for i in range(n_1)]
-r_data     = [soundfile.read(f'r_{i}.wav') for i in range(n_1)]
-s_data     = [soundfile.read(f's_{i}.wav') for i in range(n_1)]
-t_data     = [soundfile.read(f't_{i}.wav') for i in range(n_1)]
-u_data     = [soundfile.read(f'u_{i}.wav') for i in range(n_1)]
-v_data     = [soundfile.read(f'v_{i}.wav') for i in range(n_1)]
-w_data     = [soundfile.read(f'w_{i}.wav') for i in range(n_1)]
-x_data     = [soundfile.read(f'x_{i}.wav') for i in range(n_1)]
-y_data     = [soundfile.read(f'y_{i}.wav') for i in range(n_1)]
-z_data     = [soundfile.read(f'z_{i}.wav') for i in range(n_1)]
-space_data = [soundfile.read(f'__{i}.wav') for i in range(n_1)]
+a_data     = [soundfile.read(f'a_{i}.wav') for i in range(1, n_1 + 1)]
+b_data     = [soundfile.read(f'b_{i}.wav') for i in range(1, n_1 + 1)]
+c_data     = [soundfile.read(f'c_{i}.wav') for i in range(1, n_1 + 1)]
+d_data     = [soundfile.read(f'd_{i}.wav') for i in range(1, n_1 + 1)]
+e_data     = [soundfile.read(f'e_{i}.wav') for i in range(1, n_1 + 1)]
+f_data     = [soundfile.read(f'f_{i}.wav') for i in range(1, n_1 + 1)]
+g_data     = [soundfile.read(f'g_{i}.wav') for i in range(1, n_1 + 1)]
+h_data     = [soundfile.read(f'h_{i}.wav') for i in range(1, n_1 + 1)]
+i_data     = [soundfile.read(f'i_{i}.wav') for i in range(1, n_1 + 1)]
+j_data     = [soundfile.read(f'j_{i}.wav') for i in range(1, n_1 + 1)]
+k_data     = [soundfile.read(f'k_{i}.wav') for i in range(1, n_1 + 1)]
+l_data     = [soundfile.read(f'l_{i}.wav') for i in range(1, n_1 + 1)]
+m_data     = [soundfile.read(f'm_{i}.wav') for i in range(1, n_1 + 1)]
+n_data     = [soundfile.read(f'n_{i}.wav') for i in range(1, n_1 + 1)]
+o_data     = [soundfile.read(f'o_{i}.wav') for i in range(1, n_1 + 1)]
+p_data     = [soundfile.read(f'p_{i}.wav') for i in range(1, n_1 + 1)]
+q_data     = [soundfile.read(f'q_{i}.wav') for i in range(1, n_1 + 1)]
+r_data     = [soundfile.read(f'r_{i}.wav') for i in range(1, n_1 + 1)]
+s_data     = [soundfile.read(f's_{i}.wav') for i in range(1, n_1 + 1)]
+t_data     = [soundfile.read(f't_{i}.wav') for i in range(1, n_1 + 1)]
+u_data     = [soundfile.read(f'u_{i}.wav') for i in range(1, n_1 + 1)]
+v_data     = [soundfile.read(f'v_{i}.wav') for i in range(1, n_1 + 1)]
+w_data     = [soundfile.read(f'w_{i}.wav') for i in range(1, n_1 + 1)]
+x_data     = [soundfile.read(f'x_{i}.wav') for i in range(1, n_1 + 1)]
+y_data     = [soundfile.read(f'y_{i}.wav') for i in range(1, n_1 + 1)]
+z_data     = [soundfile.read(f'z_{i}.wav') for i in range(1, n_1 + 1)]
+space_data = [soundfile.read(f'__{i}.wav') for i in range(1, n_1 + 1)]
 
 a     = [d for d, sr in a_data]
 b     = [d for d, sr in b_data]
@@ -78,6 +81,7 @@ bitrate = a_data[0][1]  # assuming all recordings share the same samplerate, per
 alphabet = (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, space)
 alphabet_strings = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ')
 
+# =================CORRELATION=FUNCTIONS=================
 
 # Used for preparing samples for spectral comparison
 # Alpha controls how strong the taper is: 1 -> rect, 0 -> half-Hann
@@ -117,8 +121,10 @@ def correlate_key(sample):
     return most_correlated
 
 
+# =================MAIN=LOGIC=================
+
 # Sample of secret message. Bitrate assumed to be equal to those of letters due to recording with the same equipment.
-secret_message, bitrate = soundfile.read('secret_message.wav')
+secret_message, bitrate = soundfile.read('secret_message_1.wav')
 
 
 # Split the message up into individual keystrokes via transient detection
@@ -142,6 +148,11 @@ decrypted_message = list()
 for key in correlated_keys:
     decrypted_message.append(key[0][0])
 
+if not DO_ERROR_CORRECTION:
+    print(decrypted_message)
+    exit()
+
+# =================ERROR=CORRECTION=================
 
 # Detect if message contains all valid words
 def is_valid(message) -> bool:
@@ -159,23 +170,28 @@ def is_valid(message) -> bool:
 # Makes a single change, swapping the letter with the least confidence that has a 
 # relatively high confidence second guess. Letters may be excluded from this process,
 # done during higher correction depths.
-def tweak_message(correlations, excluded_values):
-    # Get 3 least confident non-excluded letters
-    candidates = list()
-    for i in range(3):
-        mask = np.isin(correlations, candidates + excluded_values, invert=True)
-        candidates.append(np.min(correlations[:][0], axis=1, where=mask))
+def tweak_message(correlations, excluded_indices):
+    # Create a list of non-excluded indices
+    candidate_indices = [i for i in range(len(correlations)) if i not in excluded_indices]
 
-    # Swap the candidate with the highest confidence second guess
-    altered_letter = np.max(candidates[:][1], axis=1)
-    for letter in correlations:
-        if letter == altered_letter:
-            letter.pop(0)
+    # Return early if no further tries to be made (word length < iter depth)
+    if not candidate_indices:
+        return correlations, excluded_indices
 
-    # Add to excluded values
-    excluded_values.append(altered_letter)
+    # Generate 3 candidates with small gaps between their first and second guesses
+    best_candidates = ()
+    for z in range(3):
+        best_candidates.append(max(candidate_indices, key=lambda i: correlations[i][0][1] - correlations[i][1][1]))
+        candidate_indices.remove(best_candidates)
+    # Winning candidate is one with lowest confidence first guess
+    final_candidate = max(candidate_indices, key=lambda i: correlations[i][0][1])
 
-    return correlations, excluded_values
+    # Drop the chosen candidate's first guess
+    correlations[final_candidate].pop(0)
+
+    # Add chosen candidate to excluded values and return new correlations
+    excluded_indices.append(final_candidate)
+    return correlations, excluded_indices
 
 
 current_depth = 0
@@ -184,28 +200,40 @@ current_iteration = 0
 # Display message if valid
 if is_valid(decrypted_message):
     print(decrypted_message)
-    exit
 
 else:
     current_iteration += 1
     current_depth += 1
-    altered_correlations = decrypted_message
-    altered_correlations, excluded_values = tweak_message(correlated_keys, [])
 
+    # Initial change of single letter
+    altered_correlations, excluded_indices = tweak_message(correlated_keys, [])
+
+    # Check if the correction was successful
     altered_message = list()
     for key in altered_correlations:
         altered_message.append(key[0][0])
 
+    # This loop resets the correlations to their original values and
+    # excludes the value previously tried 
     while not is_valid(altered_message) and current_iteration <= n_4:
         current_iteration += 1
-        altered_correlations, excluded_values = tweak_message(altered_correlations, excluded_values)
+
+        # Call the tweak function with the original list of keys
+        #  
+        # Previous attempts' exclusions will be remembered by excluded 
+        # values, without also excluding all exclusions made in the
+        # inner loop
+        altered_correlations, excluded_indices = tweak_message(correlated_keys, excluded_indices)
         altered_message = list()
         for key in altered_correlations:
             altered_message.append(key[0][0])
 
+        # This loop iterates the same process on the version of the
+        # correlations with only a single change
         while not is_valid(altered_message) and current_depth <= n_3:
+            excluded_this_iter = []
             current_depth += 1
-            altered_correlations, excluded_this_iter = tweak_message(altered_correlations, excluded_values | excluded_this_iter)
+            altered_correlations, excluded_this_iter = tweak_message(altered_correlations, excluded_indices + excluded_this_iter)
             altered_message = list()
             for key in altered_correlations:
                 altered_message.append(key[0][0])
@@ -213,7 +241,6 @@ else:
     # Display message, indicate if invalid
     if is_valid(altered_message):
         print(altered_message)
-        exit
     else:
         print("Unable to validate message.\n\tFirst attempt:", decrypted_message, "\n\tLast attempt:", altered_message)
             
