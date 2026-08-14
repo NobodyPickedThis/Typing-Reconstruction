@@ -8,14 +8,15 @@ import statistics
 import librosa
 import matplotlib.pyplot as plt
 import noisereduce as nr
+import copy
 
 # =================CONSTANTS=AND=SAMPLES=================
 
 # Values identified in algorithm
 n_1 = 5     # Samples per letter
-n_2 = 3     # Number of most correlated keys to include
-n_3 = 3     # Error correction depth 
-n_4 = 3     # Error correction iterations
+n_2 = 5     # Number of most correlated keys to include
+n_3 = 5     # Error correction depth 
+n_4 = 5     # Error correction iterations
 
 DO_ERROR_CORRECTION = True
 
@@ -25,8 +26,8 @@ def to_mono(signal):
 # For denoising
 noise, bitrate = soundfile.read('noise.wav')
 noise = to_mono(noise)
-denoise_thresh = 0.5 # std deviations away from noise
-denoise_amt = 0.95   # 1 -> max attenuation, 0 -> no attenuation
+denoise_thresh = 0.75 # std deviations away from noise
+denoise_amt = 0.75    # 1 -> max attenuation, 0 -> no attenuation
 
 # Allocate samples to arrays of their respective recordings. Note that all bitrates are assumed to be the same because the samples were all recorded 
 # during the same session with the same recording equipment.
@@ -151,7 +152,7 @@ onset_frames = librosa.onset.onset_detect(
     backtrack=True, 
     units='samples',
     hop_length=256,
-    delta=0.1,
+    delta=0.2,
     wait=int(0.15 * bitrate / 256),
     pre_max=int(0.03 * bitrate / 256),
     post_max=int(0.03 * bitrate / 256)
@@ -226,11 +227,11 @@ def tweak_message(correlations, excluded_indices):
 
     # Generate 3 candidates with small gaps between their first and second guesses
     best_candidates = list()
-    for z in range(3):
+    for z in range(min(3, len(candidate_indices))):
         best_candidates.append(max(candidate_indices, key=lambda i: correlations[i][0][1] - correlations[i][1][1]))
-        candidate_indices.remove(best_candidates)
+        candidate_indices.remove(best_candidates[-1])
     # Winning candidate is one with lowest confidence first guess
-    final_candidate = max(candidate_indices, key=lambda i: correlations[i][0][1])
+    final_candidate = max(best_candidates, key=lambda i: correlations[i][0][1])
 
     # Drop the chosen candidate's first guess
     correlations[final_candidate].pop(0)
@@ -249,7 +250,6 @@ if is_valid(decrypted_message):
 
 else:
     current_iteration += 1
-    current_depth += 1
 
     # Initial change of single letter
     altered_correlations, excluded_indices = tweak_message(correlated_keys, [])
@@ -264,20 +264,25 @@ else:
     while not is_valid(altered_message) and current_iteration <= n_4:
         current_iteration += 1
 
+        # Reset inner loop variables
+        current_depth = 1
+        excluded_this_iter = []
+
         # Call the tweak function with the original list of keys
         #  
         # Previous attempts' exclusions will be remembered by excluded 
         # values, without also excluding all exclusions made in the
         # inner loop
-        altered_correlations, excluded_indices = tweak_message(correlated_keys, excluded_indices)
+        altered_correlations = copy.deepcopy(correlated_keys)
+        altered_correlations, excluded_indices = tweak_message(altered_correlations, excluded_indices)
         altered_message = list()
         for key in altered_correlations:
             altered_message.append(key[0][0])
+        
 
         # This loop iterates the same process on the version of the
         # correlations with only a single change
         while not is_valid(altered_message) and current_depth <= n_3:
-            excluded_this_iter = []
             current_depth += 1
             altered_correlations, excluded_this_iter = tweak_message(altered_correlations, excluded_indices + excluded_this_iter)
             altered_message = list()
@@ -286,8 +291,10 @@ else:
 
     # Display message, indicate if invalid
     if is_valid(altered_message):
-        print(altered_message)
+        print(''.join(altered_message))
     else:
-        print("Unable to validate message.\n\tFirst attempt:", decrypted_message, "\n\tLast attempt:", altered_message)
-        print("All valid words generated during correction attempt:", all_valid_words)
+        print("Unable to validate message.\n\tFirst attempt:", decrypted_message, "\n\tLast attempt:", ''.join(altered_message))
+        print("All valid words generated during correction attempts:")
+        for w in all_valid_words:
+            print(w, end=" ")
             
