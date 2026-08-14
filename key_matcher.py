@@ -19,6 +19,7 @@ n_3 = 5     # Error correction depth
 n_4 = 5     # Error correction iterations
 
 DO_ERROR_CORRECTION = True
+USE_CONSTRUCTED_MESSAGE = True  # Appends samples of key presses to form the phrase "secret message" (the same phrase as secret_message_1)
 
 def to_mono(signal):
     return signal[:, 0] if signal.ndim > 1 else signal
@@ -27,7 +28,7 @@ def to_mono(signal):
 noise, bitrate = soundfile.read('noise.wav')
 noise = to_mono(noise)
 denoise_thresh = 0.75 # std deviations away from noise
-denoise_amt = 0.75    # 1 -> max attenuation, 0 -> no attenuation
+denoise_amt = 0.5     # 1 -> max attenuation, 0 -> no attenuation
 
 # Allocate samples to arrays of their respective recordings. Note that all bitrates are assumed to be the same because the samples were all recorded 
 # during the same session with the same recording equipment.
@@ -137,12 +138,19 @@ def correlate_key(sample):
 
 # =================MAIN=LOGIC=================
 
-# Sample of secret message. Bitrate assumed to be equal to those of letters due to recording with the same equipment.
-secret_message, bitrate = soundfile.read('secret_message_1.wav')
-secret_message = to_mono(secret_message)
+secret_message = None
 
-# Denoise
-secret_message = nr.reduce_noise(y=secret_message, sr=bitrate, y_noise=noise, stationary=True, n_std_thresh_stationary=denoise_thresh, prop_decrease=denoise_amt)
+# Splice message together from key recordings rather than one continuous message recording.
+# Note that denoising will have already been done on the individual letters, hence none here.
+if USE_CONSTRUCTED_MESSAGE:
+    secret_message = np.concatenate([s[0], e[0], c[0], r[0], e[0], t[0], space[0], m[0], e[0], s[0], s[0], a[0], g[0], e[0]])
+
+# Sample of secret message. Bitrate assumed to be equal to those of letters due to recording with the same equipment.
+else:
+    secret_message, bitrate = soundfile.read('secret_message_1.wav')
+    secret_message = to_mono(secret_message)
+    # Denoise
+    secret_message = nr.reduce_noise(y=secret_message, sr=bitrate, y_noise=noise, stationary=True, n_std_thresh_stationary=denoise_thresh, prop_decrease=denoise_amt)
 
 
 # Split the message up into individual keystrokes via transient detection
@@ -153,7 +161,7 @@ onset_frames = librosa.onset.onset_detect(
     units='samples',
     hop_length=256,
     delta=0.2,
-    wait=int(0.15 * bitrate / 256),
+    wait=int(0.25 * bitrate / 256),
     pre_max=int(0.03 * bitrate / 256),
     post_max=int(0.03 * bitrate / 256)
     )
