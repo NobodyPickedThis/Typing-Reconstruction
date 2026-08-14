@@ -19,7 +19,8 @@ n_3 = 5     # Error correction depth
 n_4 = 5     # Error correction iterations
 
 DO_ERROR_CORRECTION = True
-USE_CONSTRUCTED_MESSAGE = True  # Appends samples of key presses to form the phrase "secret message" (the same phrase as secret_message_1)
+USE_CONSTRUCTED_MESSAGE = True          # Appends samples of key presses to form the phrase "secret message" (the same phrase as secret_message_1)
+VISUALIZE_KEYPRESS_LOCATIONS = True     # Whether or not to display plot of onset times vs. waveform
 
 def to_mono(signal):
     return signal[:, 0] if signal.ndim > 1 else signal
@@ -168,12 +169,13 @@ onset_frames = librosa.onset.onset_detect(
 
 # =================VISUALIZATION=================
 
-plt.figure(figsize=(14, 4))
-plt.plot(np.linspace(start=1, stop=len(secret_message), num=len(secret_message)), secret_message, lw=0.5, color='red')
-plt.vlines(onset_frames, ymin=-1, ymax=1)
-plt.ylim(bottom=-1,top=1)
-plt.title("Onset Detections")
-plt.show()
+if VISUALIZE_KEYPRESS_LOCATIONS:
+    plt.figure(figsize=(14, 4))
+    plt.plot(np.linspace(start=1, stop=len(secret_message), num=len(secret_message)), secret_message, lw=0.5, color='red')
+    plt.vlines(onset_frames, ymin=-1, ymax=1)
+    plt.ylim(bottom=-1,top=1)
+    plt.title("Onset Detections")
+    plt.show()
 
 # ===============================================
 
