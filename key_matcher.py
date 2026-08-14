@@ -6,6 +6,8 @@ from scipy import stats
 import numpy as np
 import statistics
 import librosa
+import matplotlib.pyplot as plt
+import noisereduce as nr
 
 # =================CONSTANTS=AND=SAMPLES=================
 
@@ -15,12 +17,19 @@ n_2 = 3     # Number of most correlated keys to include
 n_3 = 3     # Error correction depth 
 n_4 = 3     # Error correction iterations
 
-DO_ERROR_CORRECTION = False
+DO_ERROR_CORRECTION = True
 
+def to_mono(signal):
+    return signal[:, 0] if signal.ndim > 1 else signal
+
+# For denoising
+noise, bitrate = soundfile.read('noise.wav')
+noise = to_mono(noise)
+denoise_thresh = 0.5 # std deviations away from noise
+denoise_amt = 0.95   # 1 -> max attenuation, 0 -> no attenuation
 
 # Allocate samples to arrays of their respective recordings. Note that all bitrates are assumed to be the same because the samples were all recorded 
-# during the same session with the same recording equipment. Samples expected to be mono.
-# FIXME take these recordings
+# during the same session with the same recording equipment.
 a_data     = [soundfile.read(f'a_{i}.wav') for i in range(1, n_1 + 1)]
 b_data     = [soundfile.read(f'b_{i}.wav') for i in range(1, n_1 + 1)]
 c_data     = [soundfile.read(f'c_{i}.wav') for i in range(1, n_1 + 1)]
@@ -49,37 +58,41 @@ y_data     = [soundfile.read(f'y_{i}.wav') for i in range(1, n_1 + 1)]
 z_data     = [soundfile.read(f'z_{i}.wav') for i in range(1, n_1 + 1)]
 space_data = [soundfile.read(f'__{i}.wav') for i in range(1, n_1 + 1)]
 
-a     = [d for d, sr in a_data]
-b     = [d for d, sr in b_data]
-c     = [d for d, sr in c_data]
-d     = [d for d, sr in d_data]
-e     = [d for d, sr in e_data]
-f     = [d for d, sr in f_data]
-g     = [d for d, sr in g_data]
-h     = [d for d, sr in h_data]
-i     = [d for d, sr in i_data]
-j     = [d for d, sr in j_data]
-k     = [d for d, sr in k_data]
-l     = [d for d, sr in l_data]
-m     = [d for d, sr in m_data]
-n     = [d for d, sr in n_data]
-o     = [d for d, sr in o_data]
-p     = [d for d, sr in p_data]
-q     = [d for d, sr in q_data]
-r     = [d for d, sr in r_data]
-s     = [d for d, sr in s_data]
-t     = [d for d, sr in t_data]
-u     = [d for d, sr in u_data]
-v     = [d for d, sr in v_data]
-w     = [d for d, sr in w_data]
-x     = [d for d, sr in x_data]
-y     = [d for d, sr in y_data]
-z     = [d for d, sr in z_data]
-space = [d for d, sr in space_data]
+a     = [to_mono(d) for d, sr in a_data]
+b     = [to_mono(d) for d, sr in b_data]
+c     = [to_mono(d) for d, sr in c_data]
+d     = [to_mono(d) for d, sr in d_data]
+e     = [to_mono(d) for d, sr in e_data]
+f     = [to_mono(d) for d, sr in f_data]
+g     = [to_mono(d) for d, sr in g_data]
+h     = [to_mono(d) for d, sr in h_data]
+i     = [to_mono(d) for d, sr in i_data]
+j     = [to_mono(d) for d, sr in j_data]
+k     = [to_mono(d) for d, sr in k_data]
+l     = [to_mono(d) for d, sr in l_data]
+m     = [to_mono(d) for d, sr in m_data]
+n     = [to_mono(d) for d, sr in n_data]
+o     = [to_mono(d) for d, sr in o_data]
+p     = [to_mono(d) for d, sr in p_data]
+q     = [to_mono(d) for d, sr in q_data]
+r     = [to_mono(d) for d, sr in r_data]
+s     = [to_mono(d) for d, sr in s_data]
+t     = [to_mono(d) for d, sr in t_data]
+u     = [to_mono(d) for d, sr in u_data]
+v     = [to_mono(d) for d, sr in v_data]
+w     = [to_mono(d) for d, sr in w_data]
+x     = [to_mono(d) for d, sr in x_data]
+y     = [to_mono(d) for d, sr in y_data]
+z     = [to_mono(d) for d, sr in z_data]
+space = [to_mono(d) for d, sr in space_data]
 
-bitrate = a_data[0][1]  # assuming all recordings share the same samplerate, per your comment
+bitrate = a_data[0][1]
 alphabet = (a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z, space)
 alphabet_strings = ('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', ' ')
+
+for letter in alphabet:
+    for pos in range(len(letter)):
+        letter[pos] = nr.reduce_noise(y=letter[pos], sr=bitrate, y_noise=noise, stationary=True, n_std_thresh_stationary=denoise_thresh, prop_decrease=denoise_amt)
 
 # =================CORRELATION=FUNCTIONS=================
 
@@ -125,10 +138,36 @@ def correlate_key(sample):
 
 # Sample of secret message. Bitrate assumed to be equal to those of letters due to recording with the same equipment.
 secret_message, bitrate = soundfile.read('secret_message_1.wav')
+secret_message = to_mono(secret_message)
+
+# Denoise
+secret_message = nr.reduce_noise(y=secret_message, sr=bitrate, y_noise=noise, stationary=True, n_std_thresh_stationary=denoise_thresh, prop_decrease=denoise_amt)
 
 
 # Split the message up into individual keystrokes via transient detection
-onset_frames = librosa.onset.onset_detect(y=secret_message, sr=bitrate, backtrack=True, units='samples')
+onset_frames = librosa.onset.onset_detect(
+    y=secret_message, 
+    sr=bitrate, 
+    backtrack=True, 
+    units='samples',
+    hop_length=256,
+    delta=0.1,
+    wait=int(0.15 * bitrate / 256),
+    pre_max=int(0.03 * bitrate / 256),
+    post_max=int(0.03 * bitrate / 256)
+    )
+
+# =================VISUALIZATION=================
+
+plt.figure(figsize=(14, 4))
+plt.plot(np.linspace(start=1, stop=len(secret_message), num=len(secret_message)), secret_message, lw=0.5, color='red')
+plt.vlines(onset_frames, ymin=-1, ymax=1)
+plt.ylim(bottom=-1,top=1)
+plt.title("Onset Detections")
+plt.show()
+
+# ===============================================
+
 keystrokes = list()
 for idx in range(len(onset_frames)):
     if idx < len(onset_frames) - 1:
@@ -144,15 +183,20 @@ for keystroke in keystrokes:
 
 
 # Initial message attempt
-decrypted_message = list()
+decrypted_keys = list()
 for key in correlated_keys:
-    decrypted_message.append(key[0][0])
+    decrypted_keys.append(key[0][0])
+decrypted_message = ''.join(decrypted_keys)
 
 if not DO_ERROR_CORRECTION:
     print(decrypted_message)
     exit()
 
 # =================ERROR=CORRECTION=================
+
+# Store any valid detected words to display as suggestions
+# in case error correction on the larger message fails.
+all_valid_words = set()
 
 # Detect if message contains all valid words
 def is_valid(message) -> bool:
@@ -164,6 +208,8 @@ def is_valid(message) -> bool:
         for word in words_in_message:
             if not word in words_list:
                 valid = False
+            else:
+                all_valid_words.add(word)
         return valid
 
 
@@ -179,7 +225,7 @@ def tweak_message(correlations, excluded_indices):
         return correlations, excluded_indices
 
     # Generate 3 candidates with small gaps between their first and second guesses
-    best_candidates = ()
+    best_candidates = list()
     for z in range(3):
         best_candidates.append(max(candidate_indices, key=lambda i: correlations[i][0][1] - correlations[i][1][1]))
         candidate_indices.remove(best_candidates)
@@ -243,4 +289,5 @@ else:
         print(altered_message)
     else:
         print("Unable to validate message.\n\tFirst attempt:", decrypted_message, "\n\tLast attempt:", altered_message)
+        print("All valid words generated during correction attempt:", all_valid_words)
             
